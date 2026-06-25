@@ -1,0 +1,1035 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PII × Cyvl — Admissions Portal</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;0,900;1,400;1,700&family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400&display=swap">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --accent:#c8401e;--ink:#0e0e0c;--paper:#faf9f5;--warm:#f3f0e8;--rule:rgba(14,14,12,0.12);
+  --serif:'Playfair Display',Georgia,serif;--sans:'DM Sans',system-ui,sans-serif;--mono:'DM Mono',monospace;
+  --admit:#1a6b3a;--admit-bg:#edf7f1;--reject:#9b2020;--reject-bg:#fdf0f0;--waitlist:#7a5c12;--waitlist-bg:#fdf8ec;
+}
+body{background:var(--paper);color:var(--ink);font-family:var(--sans);min-height:100vh}
+.view{display:none}.view.active{display:flex;flex-direction:column;min-height:100vh}
+
+/* LOGIN */
+#loginView{align-items:center;justify-content:center;background:var(--ink)}
+.login-card{width:420px;padding:56px 48px;background:var(--paper);border-radius:2px}
+.login-logo{text-align:center;margin-bottom:40px}
+.login-logo-ring{width:72px;height:72px;border:2px solid var(--accent);border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 16px}
+.login-logo-ring span{font-family:var(--serif);font-size:22px;font-weight:700;color:var(--accent)}
+.login-logo h1{font-family:var(--serif);font-size:18px;font-weight:700;letter-spacing:.02em;color:var(--ink)}
+.login-logo p{font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:rgba(14,14,12,.45);margin-top:4px}
+.login-card h2{font-family:var(--serif);font-size:22px;font-weight:700;margin-bottom:8px;text-align:center}
+.login-card .sub{font-size:13px;color:rgba(14,14,12,.5);text-align:center;margin-bottom:32px}
+.field{margin-bottom:20px}
+.field label{display:block;font-size:11px;letter-spacing:.1em;text-transform:uppercase;font-weight:600;margin-bottom:6px;color:rgba(14,14,12,.6)}
+.field input{width:100%;padding:12px 14px;border:1.5px solid var(--rule);border-radius:2px;font-family:var(--sans);font-size:14px;background:var(--warm);outline:none;transition:border-color .2s}
+.field input:focus{border-color:var(--accent)}
+.btn-primary{width:100%;padding:14px;background:var(--accent);color:#fff;border:none;border-radius:2px;font-family:var(--sans);font-size:14px;font-weight:600;cursor:pointer;letter-spacing:.04em;transition:opacity .2s}
+.btn-primary:hover{opacity:.88}
+.login-err{color:var(--reject);font-size:13px;text-align:center;margin-top:12px;min-height:18px}
+
+/* TOPBAR */
+.topbar{height:64px;background:var(--ink);display:flex;align-items:center;justify-content:space-between;padding:0 32px;flex-shrink:0;position:sticky;top:0;z-index:100}
+.topbar-brand{display:flex;align-items:center;gap:14px}
+.topbar-ring{width:36px;height:36px;border:1.5px solid var(--accent);border-radius:50%;display:flex;align-items:center;justify-content:center}
+.topbar-ring span{font-family:var(--serif);font-size:11px;font-weight:700;color:var(--accent)}
+.topbar-name{font-family:var(--serif);font-size:15px;font-weight:700;color:#fff;letter-spacing:.02em}
+.topbar-sub{font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:rgba(255,255,255,.45)}
+.topbar-right{display:flex;align-items:center;gap:20px}
+.topbar-user{font-size:12px;color:rgba(255,255,255,.55)}
+.btn-ghost{background:none;border:1px solid rgba(255,255,255,.2);color:rgba(255,255,255,.7);padding:7px 16px;border-radius:2px;font-size:12px;cursor:pointer;font-family:var(--sans);transition:all .2s}
+.btn-ghost:hover{background:rgba(255,255,255,.08);color:#fff}
+.tab-nav{display:flex;gap:0;margin-left:24px}
+.tab-btn{background:none;border:none;border-bottom:2px solid transparent;color:rgba(255,255,255,.5);padding:8px 18px;font-size:13px;cursor:pointer;font-family:var(--sans);transition:all .2s}
+.tab-btn.active{color:#fff;border-bottom-color:var(--accent)}
+.tab-btn:hover:not(.active){color:rgba(255,255,255,.8)}
+
+/* CONTENT */
+.content{flex:1;padding:40px 48px;max-width:1500px;width:100%;margin:0 auto}
+.section-hdr{display:flex;align-items:flex-end;justify-content:space-between;margin-bottom:32px;padding-bottom:16px;border-bottom:1px solid var(--rule)}
+.section-hdr h2{font-family:var(--serif);font-size:28px;font-weight:700}
+.section-hdr p{font-size:13px;color:rgba(14,14,12,.5);margin-top:4px}
+.badge-count{display:inline-flex;align-items:center;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:600;background:var(--warm);color:var(--ink);border:1px solid var(--rule);margin-left:10px}
+
+/* TABLE */
+.applicant-table-wrap{overflow-x:auto}
+.applicant-table{width:100%;border-collapse:collapse;font-size:13px}
+.applicant-table th{text-align:left;padding:10px 12px;font-size:10px;letter-spacing:.1em;text-transform:uppercase;font-weight:600;color:rgba(14,14,12,.45);border-bottom:2px solid var(--rule);white-space:nowrap}
+.applicant-table td{padding:12px 12px;border-bottom:1px solid var(--rule);vertical-align:top}
+.applicant-table tr.data-row:hover td{background:rgba(243,240,232,.6)}
+.app-name{font-weight:600;font-size:14px}
+.app-meta{font-size:11px;color:rgba(14,14,12,.5);margin-top:2px}
+.app-link{color:var(--accent);text-decoration:none;font-size:11px}
+.app-link:hover{text-decoration:underline}
+.expand-btn{background:none;border:1px solid var(--rule);padding:5px 12px;border-radius:2px;font-size:11px;cursor:pointer;font-family:var(--mono);color:var(--ink);transition:all .2s;white-space:nowrap}
+.expand-btn:hover{border-color:var(--accent);color:var(--accent)}
+
+/* EXPANDED APPLICATION */
+.expand-row{display:none}
+.expand-row.open{display:table-row}
+.expand-cell{padding:0 !important;background:var(--warm);border-bottom:2px solid var(--accent) !important}
+.app-full{padding:28px 32px}
+.app-full-grid{display:grid;grid-template-columns:1fr 1fr;gap:0;border:1px solid var(--rule);border-radius:2px;overflow:hidden;background:#fff}
+.app-q{padding:20px 24px;border-bottom:1px solid var(--rule)}
+.app-q:nth-child(odd){border-right:1px solid var(--rule)}
+.app-q.full-width{grid-column:1/-1;border-right:none}
+.app-q:last-child,.app-q:nth-last-child(2):nth-child(odd){border-bottom:none}
+.app-q-label{font-size:10px;letter-spacing:.1em;text-transform:uppercase;font-weight:700;color:var(--accent);margin-bottom:8px}
+.app-q-answer{font-size:13px;line-height:1.7;color:var(--ink);white-space:pre-wrap;word-break:break-word}
+.app-q-answer a{color:var(--accent);text-decoration:none}
+.app-q-answer a:hover{text-decoration:underline}
+.app-q-empty{color:rgba(14,14,12,.3);font-style:italic}
+
+/* DECISION */
+.decision-cell{white-space:nowrap}
+.decision-group{display:flex;flex-direction:column;gap:5px}
+.dec-row{display:flex;align-items:center;gap:6px}
+.dec-row label{font-size:12px;cursor:pointer;font-weight:500}
+input[type=checkbox]{width:15px;height:15px;cursor:pointer;accent-color:var(--accent)}
+.cb-admit+label{color:var(--admit)}
+.cb-reject+label{color:var(--reject)}
+.cb-waitlist+label{color:var(--waitlist)}
+.notes-field{width:180px;padding:6px 8px;border:1.5px solid var(--rule);border-radius:2px;font-size:12px;font-family:var(--sans);resize:vertical;min-height:52px;outline:none;transition:border-color .2s}
+.notes-field:focus{border-color:var(--accent)}
+.save-btn{margin-top:5px;padding:5px 12px;background:var(--ink);color:#fff;border:none;border-radius:2px;font-size:11px;font-weight:600;cursor:pointer;font-family:var(--sans);transition:opacity .2s}
+.save-btn:hover{opacity:.75}
+.saved-flash{display:none;font-size:10px;color:var(--admit);font-weight:600;margin-top:3px}
+.decision-status{display:inline-block;padding:3px 8px;border-radius:20px;font-size:10px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;margin-top:4px}
+.ds-admit{background:var(--admit-bg);color:var(--admit)}
+.ds-reject{background:var(--reject-bg);color:var(--reject)}
+.ds-waitlist{background:var(--waitlist-bg);color:var(--waitlist)}
+.ds-pending{background:var(--warm);color:rgba(14,14,12,.4);border:1px solid var(--rule)}
+
+/* FILTER */
+.filter-bar{display:flex;align-items:center;gap:12px;margin-bottom:24px;flex-wrap:wrap}
+.filter-bar input[type=text]{padding:9px 14px;border:1.5px solid var(--rule);border-radius:2px;font-size:13px;font-family:var(--sans);background:var(--warm);outline:none;width:280px;transition:border-color .2s}
+.filter-bar input[type=text]:focus{border-color:var(--accent)}
+.filter-select{padding:9px 14px;border:1.5px solid var(--rule);border-radius:2px;font-size:13px;font-family:var(--sans);background:var(--warm);cursor:pointer;outline:none}
+
+/* ADMIN */
+.stats-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:16px;margin-bottom:40px}
+.stat-card{background:var(--warm);border:1px solid var(--rule);padding:24px;border-radius:2px}
+.stat-num{font-family:var(--serif);font-size:36px;font-weight:700}
+.stat-lbl{font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:rgba(14,14,12,.45);margin-top:4px}
+.stat-card.s-admit .stat-num{color:var(--admit)}
+.stat-card.s-reject .stat-num{color:var(--reject)}
+.stat-card.s-waitlist .stat-num{color:var(--waitlist)}
+.stat-card.s-pending .stat-num{color:rgba(14,14,12,.35)}
+.admin-table{width:100%;border-collapse:collapse;font-size:13px;margin-top:8px}
+.admin-table th{text-align:left;padding:10px 12px;font-size:10px;letter-spacing:.1em;text-transform:uppercase;font-weight:600;color:rgba(14,14,12,.45);border-bottom:2px solid var(--rule)}
+.admin-table td{padding:12px 12px;border-bottom:1px solid var(--rule);vertical-align:middle}
+.admin-table tr:hover td{background:rgba(243,240,232,.5)}
+.export-btn{padding:9px 20px;background:var(--ink);color:#fff;border:none;border-radius:2px;font-size:12px;font-weight:600;cursor:pointer;font-family:var(--sans);letter-spacing:.04em;transition:opacity .2s}
+.export-btn:hover{opacity:.75}
+/* vote count pills */
+.vote-counts{display:flex;flex-direction:column;gap:4px;min-width:130px}
+.vote-row{display:flex;align-items:center;gap:6px;font-size:12px}
+.vote-pill{display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;border-radius:50%;font-size:11px;font-weight:700;flex-shrink:0}
+.vp-admit{background:var(--admit-bg);color:var(--admit)}
+.vp-reject{background:var(--reject-bg);color:var(--reject)}
+.vp-waitlist{background:var(--waitlist-bg);color:var(--waitlist)}
+.vote-label{font-size:11px;color:rgba(14,14,12,.55)}
+.vote-zero{opacity:.35}
+/* final decision cell */
+.final-dec-cell{min-width:160px}
+.tie-badge{display:inline-block;padding:3px 9px;border-radius:20px;font-size:10px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;background:#f0eaf8;color:#5a3a8a;border:1px solid #d4c3f0}
+.override-select{margin-top:8px;padding:6px 10px;border:1.5px solid var(--rule);border-radius:2px;font-size:12px;font-family:var(--sans);background:var(--warm);cursor:pointer;outline:none;width:100%}
+.override-select:focus{border-color:var(--accent)}
+.override-set{display:inline-block;padding:3px 9px;border-radius:20px;font-size:10px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;border:1.5px solid currentColor;margin-bottom:4px}
+.override-btn-row{display:flex;gap:6px;margin-top:6px;flex-wrap:wrap}
+.ov-btn{padding:4px 10px;border-radius:2px;font-size:11px;font-weight:600;cursor:pointer;border:1.5px solid var(--rule);background:var(--warm);font-family:var(--sans);transition:all .2s}
+.ov-btn:hover{border-color:var(--accent);color:var(--accent)}
+.ov-btn-clear{color:rgba(14,14,12,.4)}
+/* admin applicant view tabs */
+.admin-sub-tabs{display:flex;gap:0;margin-bottom:28px;border-bottom:2px solid var(--rule)}
+.ast-btn{background:none;border:none;border-bottom:3px solid transparent;margin-bottom:-2px;padding:10px 20px;font-size:13px;font-weight:500;cursor:pointer;font-family:var(--sans);color:rgba(14,14,12,.5);transition:all .2s}
+.ast-btn.active{color:var(--ink);border-bottom-color:var(--accent);font-weight:600}
+
+/* CMS */
+.cms-section{margin-bottom:48px}
+.cms-section h3{font-family:var(--serif);font-size:20px;margin-bottom:20px;padding-bottom:12px;border-bottom:1px solid var(--rule)}
+.reviewer-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;margin-bottom:24px}
+.reviewer-card{background:var(--warm);border:1px solid var(--rule);padding:20px;border-radius:2px;position:relative}
+.reviewer-card h4{font-size:14px;font-weight:600}
+.reviewer-card p{font-size:12px;color:rgba(14,14,12,.5);margin-top:3px}
+.reviewer-card .badge-role{font-size:10px;letter-spacing:.08em;text-transform:uppercase;background:var(--ink);color:#fff;padding:2px 8px;border-radius:20px;display:inline-block;margin-top:8px}
+.del-btn{position:absolute;top:12px;right:12px;background:none;border:none;color:rgba(14,14,12,.3);cursor:pointer;font-size:16px;line-height:1;transition:color .2s}
+.del-btn:hover{color:var(--reject)}
+.add-form{background:var(--warm);border:1px solid var(--rule);padding:28px;border-radius:2px}
+.add-form h4{font-size:14px;font-weight:600;margin-bottom:20px}
+.form-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px}
+.form-field{display:flex;flex-direction:column;gap:6px}
+.form-field label{font-size:10px;letter-spacing:.1em;text-transform:uppercase;font-weight:600;color:rgba(14,14,12,.5)}
+.form-field input{padding:10px 12px;border:1.5px solid var(--rule);border-radius:2px;font-size:13px;font-family:var(--sans);background:#fff;outline:none;transition:border-color .2s}
+.form-field input:focus{border-color:var(--accent)}
+.form-actions{margin-top:20px;display:flex;align-items:center;gap:12px}
+.btn-add{padding:10px 24px;background:var(--accent);color:#fff;border:none;border-radius:2px;font-size:13px;font-weight:600;cursor:pointer;font-family:var(--sans);transition:opacity .2s}
+.btn-add:hover{opacity:.85}
+.form-msg{font-size:12px;color:var(--admit);font-weight:500}
+.form-err{font-size:12px;color:var(--reject)}
+@media(max-width:900px){
+  .reviewer-grid,.form-grid{grid-template-columns:1fr 1fr}
+  .stats-grid{grid-template-columns:repeat(3,1fr)}
+  .content{padding:24px 20px}
+  .app-full-grid{grid-template-columns:1fr}
+  .app-q{border-right:none !important}
+}
+</style>
+</head>
+<body>
+
+<!-- LOGIN -->
+<div id="loginView" class="view active">
+  <div class="login-card">
+    <div class="login-logo">
+      <div class="login-logo-ring"><span>PII</span></div>
+      <h1>The Public Innovation Institute</h1>
+      <p>Admissions Portal</p>
+    </div>
+    <h2>Sign In</h2>
+    <p class="sub">Enter your credentials to access the applications.</p>
+    <div class="field"><label>Email</label><input type="email" id="loginEmail" placeholder="you@example.com" autocomplete="username"></div>
+    <div class="field"><label>Password</label><input type="password" id="loginPass" placeholder="••••••••" autocomplete="current-password"></div>
+    <button class="btn-primary" onclick="doLogin()">Sign In</button>
+    <div class="login-err" id="loginErr"></div>
+  </div>
+</div>
+
+<!-- REVIEWER VIEW -->
+<div id="reviewerView" class="view">
+  <div class="topbar">
+    <div class="topbar-brand">
+      <div class="topbar-ring"><span>PII</span></div>
+      <div>
+        <div class="topbar-name">The Public Innovation Institute</div>
+        <div class="topbar-sub">PII × Cyvl Summer Innovation Program · Admissions 2026</div>
+      </div>
+    </div>
+    <div class="topbar-right">
+      <span class="topbar-user" id="reviewerLabel"></span>
+      <button class="btn-ghost" onclick="doLogout()">Sign Out</button>
+    </div>
+  </div>
+  <div class="content">
+    <div class="section-hdr">
+      <div>
+        <h2>Applicant Review<span class="badge-count" id="appCountBadge">18</span></h2>
+        <p>Click "Full Application" on any row to read all responses verbatim. Record your decisions using the checkboxes.</p>
+      </div>
+    </div>
+    <div class="filter-bar">
+      <input type="text" id="searchInput" placeholder="Search by name, institution, location…" oninput="filterApplicants()">
+      <select class="filter-select" id="statusFilter" onchange="filterApplicants()">
+        <option value="">All Statuses</option>
+        <option value="admit">Admit</option>
+        <option value="reject">Reject</option>
+        <option value="waitlist">Waitlist</option>
+        <option value="pending">Pending</option>
+      </select>
+    </div>
+    <div class="applicant-table-wrap">
+      <table class="applicant-table" id="appTable">
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>Applicant</th>
+            <th>Institution</th>
+            <th>Program / Year</th>
+            <th>Location</th>
+            <th>Type</th>
+            <th>LinkedIn</th>
+            <th>Full Application</th>
+            <th>Decision</th>
+            <th>Notes</th>
+          </tr>
+        </thead>
+        <tbody id="appTbody"></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- ADMIN VIEW -->
+<div id="adminView" class="view">
+  <div class="topbar">
+    <div class="topbar-brand">
+      <div class="topbar-ring"><span>PII</span></div>
+      <div>
+        <div class="topbar-name">The Public Innovation Institute</div>
+        <div class="topbar-sub">PII × Cyvl Summer Innovation Program · Admin</div>
+      </div>
+    </div>
+    <div class="topbar-right">
+      <div class="tab-nav">
+        <button class="tab-btn active" onclick="showAdminTab('dashboard',this)">Dashboard</button>
+        <button class="tab-btn" onclick="showAdminTab('cms',this)">Reviewers CMS</button>
+      </div>
+      <span class="topbar-user">khahlil@thepii.org</span>
+      <button class="btn-ghost" onclick="doLogout()">Sign Out</button>
+    </div>
+  </div>
+  <div id="dashboardTab" class="content">
+    <div class="section-hdr">
+      <div><h2>Admissions Dashboard</h2><p>Aggregate review decisions across all reviewers · PII × Cyvl Summer Innovation Program 2026</p></div>
+      <button class="export-btn" onclick="exportCSV()">Export CSV</button>
+    </div>
+    <div class="admin-sub-tabs">
+      <button class="ast-btn active" id="ast-summary" onclick="showAdminSubTab('summary',this)">Decision Summary</button>
+      <button class="ast-btn" id="ast-packets" onclick="showAdminSubTab('packets',this)">Applicant Packets</button>
+    </div>
+    <!-- Summary sub-tab -->
+    <div id="adminSummaryPane">
+      <div class="stats-grid">
+        <div class="stat-card"><div class="stat-num" id="ds-total">18</div><div class="stat-lbl">Total Applicants</div></div>
+        <div class="stat-card s-admit"><div class="stat-num" id="ds-admit">0</div><div class="stat-lbl">Admit</div></div>
+        <div class="stat-card s-reject"><div class="stat-num" id="ds-reject">0</div><div class="stat-lbl">Reject</div></div>
+        <div class="stat-card s-waitlist"><div class="stat-num" id="ds-waitlist">0</div><div class="stat-lbl">Waitlist</div></div>
+        <div class="stat-card s-pending"><div class="stat-num" id="ds-pending">18</div><div class="stat-lbl">Pending</div></div>
+      </div>
+      <h3 style="font-family:var(--serif);font-size:18px;margin-bottom:16px">All Decisions by Applicant</h3>
+      <table class="admin-table"><thead><tr><th>#</th><th>Applicant</th><th>Institution</th><th>Reviewer Votes</th><th>Final Decision</th><th>Reviewer Notes</th></tr></thead><tbody id="adminTbody"></tbody></table>
+    </div>
+    <!-- Packets sub-tab -->
+    <div id="adminPacketsPane" style="display:none">
+      <div class="section-hdr" style="margin-top:0">
+        <div>
+          <p style="font-size:13px;color:rgba(14,14,12,.5)">Viewing as admin. Your decisions are recorded separately from reviewer decisions.</p>
+        </div>
+        <div style="display:flex;gap:12px;align-items:center">
+          <input type="text" id="adminSearchInput" placeholder="Search applicants…" oninput="filterAdminPackets()" style="padding:9px 14px;border:1.5px solid var(--rule);border-radius:2px;font-size:13px;font-family:var(--sans);background:var(--warm);outline:none;width:260px">
+        </div>
+      </div>
+      <div class="applicant-table-wrap">
+        <table class="applicant-table" id="adminAppTable">
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>Applicant</th>
+              <th>Institution</th>
+              <th>Program / Year</th>
+              <th>Location</th>
+              <th>Type</th>
+              <th>LinkedIn</th>
+              <th>Full Application</th>
+              <th>Your Decision</th>
+              <th>Notes</th>
+            </tr>
+          </thead>
+          <tbody id="adminAppTbody"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+  <div id="cmsTab" class="content" style="display:none">
+    <div class="section-hdr"><div><h2>Reviewer Credentials</h2><p>Create and manage reviewer accounts. Reviewers access applicant packets but not this dashboard.</p></div></div>
+    <div class="cms-section"><h3>Active Reviewers</h3><div class="reviewer-grid" id="reviewerGrid"></div></div>
+    <div class="cms-section">
+      <div class="add-form">
+        <h4>Add New Reviewer</h4>
+        <div class="form-grid">
+          <div class="form-field"><label>Full Name</label><input type="text" id="newName" placeholder="Jane Smith"></div>
+          <div class="form-field"><label>Email</label><input type="email" id="newEmail" placeholder="jane@example.org"></div>
+          <div class="form-field"><label>Password</label><input type="text" id="newPass" placeholder="Choose a password"></div>
+        </div>
+        <div class="form-actions">
+          <button class="btn-add" onclick="addReviewer()">Add Reviewer</button>
+          <span class="form-msg" id="cmsMsg"></span>
+          <span class="form-err" id="cmsErr"></span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+const ADMIN = {email:'khahlil@thepii.org', password:'#ThePII#2026', name:'Khahlil Louisy'};
+
+// ── APPLICANTS: verbatim from CSV ──────────────────────────────────────────
+const APPLICANTS = [
+  {id:1,
+   Q1:"Individual",
+   Q2:"Kaushlendra Kumar Verma",
+   Q3:"kkvkausal@gmail.com",
+   Q4:"University of arizona",
+   Q5:"Recent Graduate MS in Business Analytics, May 2026",
+   Q6:"www.linkedin.com/in/kaushlendra-kumar-verma",
+   Q7:"United States",
+   Q8:"Yes",Q8_2:"",
+   Q9:"Yes, across all three areas. On the data and technology side, I built and deployed an OUD Treatment Dropout Risk Prediction system using a neural network trained on 95,000+ government records, achieving 92% recall, and an IRC Geometric Design Compliance Checker covering 432 highway design parameters, both live as public Streamlit apps. I also placed 1st in the American Express Credit Risk Analytics Competition analyzing 36,000+ client applications. On the policy and civic side, I won the 2026 Arizona Statewide Business Competition (Graduate Division) for a supply chain strategy addressing economic and cultural sovereignty challenges facing Navajo wool producers, and my vaccine uptake prediction project included a fairness analysis across race, income, and age subgroups to flag equity gaps in public health outreach. My professional background adds a further layer: 9+ years delivering highway infrastructure projects in India, which gives me direct experience with how governments prioritize, fund, and execute public works under real resource constraints.",
+   Q10:"The challenge I most want to dig into is infrastructure condition assessment and maintenance prioritization, specifically how cities can move from reactive, budget-driven patching to data-driven decisions about what to fix first and why. This isn\u2019t abstract for me. I spent nine years delivering highway design and pavement evaluation projects in India, where the gap between what governments know about their road networks and what they actually act on is enormous, not because the data doesn\u2019t exist, but because no one has built the tools to make it usable at scale. I\u2019m currently building an AI-powered pavement distress detection pipeline using YOLOv11 and IRC pavement condition standards on real road survey video, so the technical side of this problem is something I\u2019m actively working through. What excites me about this program is the other half of that equation: understanding how condition data gets translated into budget decisions, whose roads get prioritized, and what role equity plays in that calculus. That intersection of infrastructure intelligence and public accountability is exactly where I want to be.",
+   Q11:"",Q12:""},
+
+  {id:2,
+   Q1:"Individual",
+   Q2:"Alexander Lap",
+   Q3:"Alex.lap118@gmail.com",
+   Q4:"Worcester Polytechnic Institute",
+   Q5:"Recent grad, B.Sc. Computer Science, 2026, M.Sc. Cybersecurity, December 2026",
+   Q6:"https://www.linkedin.com/in/alexanderlap",
+   Q7:"Massachusetts",
+   Q8:"Yes",Q8_2:"",
+   Q9:"I did a project with Microsoft on end users troubleshooting problems and my job was to identify how we can use machine learning and data to help IT teams. I\u2019ve also done cybersecurity policy work back in high school to provide best security practices for the city of Northampton.",
+   Q10:"AI in government decision making would be something to explore just because I\u2019m vastly interested in government work and how AI can make an impact.",
+   Q11:"",Q12:""},
+
+  {id:3,
+   Q1:"Individual",
+   Q2:"Bryan Jacobs",
+   Q3:"bryanj82202@gmail.com",
+   Q4:"University of Arizona",
+   Q5:"Recent grad, M.Sc. Data Science, 2025",
+   Q6:"https://www.linkedin.com/in/bryanjacobs822/",
+   Q7:"New York, United States",
+   Q8:"Yes",Q8_2:"",
+   Q9:"Yes, I have a Master's in Data Science and a Bachelor's in Mathematics. I have completed many socially focused projects within these domains. While in Tucson, I interned with the International Rescue Committee where I leveraged data and technology to improve refugee casework, and worked with the Community Food Bank of Arizona to provide food for at-risk families when SNAP benefits were paused during recent government shutdowns. Here is a brief description of one of my most recent projects for context:\n\nAnalysis of Government Insurance Programs and their Role in Equitable Healthcare Access                                  Dec 2025\nApplied Poisson regression in R to a dataset of 364,627 individuals and 546,028 hospitalizations (~50 variables), identifying 1-17% increases in healthcare utilization among minority populations enrolled in Medicare or Medicaid, with findings summarized for a multidisciplinary audience.",
+   Q10:"Infrastructure equity and public budget allocation call out to me. As a voter, it too often feels as if we're guessing what the best decisions are for our communities. I would love to see a greater use of analytics in public decision making to foster communities based in equity, and provide justice for communities who have been underserved for centuries.",
+   Q11:"",Q12:""},
+
+  {id:4,
+   Q1:"Individual",
+   Q2:"Alexander Lap",
+   Q3:"alex.lap118@gmail.com",
+   Q4:"Recent grad, Masters at Worcester Polytechnic Institute",
+   Q5:"Recent grad, B.Sc. Computer Science, 2026, M.Sc. Cybersecurity, Dec 2026",
+   Q6:"https://www.linkedin.com/in/alexanderlap/",
+   Q7:"US and Massachusetts",
+   Q8:"Yes",Q8_2:"",
+   Q9:"Worked on a project with Microsoft related to end users suffering from tech issues, and our goal was to identify these problems with machine learning, workflow automation, and data annotations to alleviate the burden on IT resources. Additionally, I've worked on cybersecurity policies for the City of Northampton by researching and presenting best practices that can be used in the workplace. ",
+   Q10:"AI in government decision-making applies to my curiosity because I'd want to explore how AI affects a bigger landscape, and overall government and cybersecurity together would be my main focus. ",
+   Q11:"",Q12:""},
+
+  {id:5,
+   Q1:"Individual",
+   Q2:"Monica Chen",
+   Q3:"monicac7@bu.edu",
+   Q4:"Boston University ",
+   Q5:"BS. Data Science, 2029",
+   Q6:"https://www.linkedin.com/in/monica-chen-/",
+   Q7:"New York, USA",
+   Q8:"Yes",Q8_2:"",
+   Q9:"Yes, I have experience across data, technology, and civic work. At TriLeaf Designs, I cleaned and validated 2,000+ records in Excel to support analysis and reporting workflows. I also built SpecSquared, a multi-agent AI reasoning system using Python, vLLM, and NemoClaw. On the civic side, I served as Technology Director at SightShare, a nonprofit where I maintained the website and edited educational videos to improve accessibility. I also work as an AI Trainer at Handshake, where I test AI models to find where they fail. My coursework in Data Science at Boston University has given me a strong foundation in Python, SQL, Rust, and data analytics.",
+   Q10:"I am really drawn to AI in government decision-making. I think there is so much potential in using data tools to make public services more accessible and fair, but it is rarely done well. Having built multi-agent AI systems and worked with nonprofits focused on community impact, I want to see how these tools actually hold up in a civic context. I am especially curious about how data pipelines and machine learning can pull insights from public datasets like budget allocations or infrastructure records in ways that actually help inform real policy decisions.",
+   Q11:"N/A not a team application",Q12:""},
+
+  {id:6,
+   Q1:"Individual",
+   Q2:"Khushbu lalchandani",
+   Q3:"khush11@bu.edu",
+   Q4:"boston university",
+   Q5:"MS Data science, 2027",
+   Q6:"https://www.linkedin.com/in/khushbu-lalchandani/",
+   Q7:"Massachusetts, US",
+   Q8:"Yes",Q8_2:"",
+   Q9:"Yes, across several areas spanning data, technology, and civic impact. Professionally, I worked as a Business Analyst at ICICI Lombard, where I built Power BI dashboards that replaced manual reporting workflows and were adopted by senior stakeholders for real-time decision-making. At Dun & Bradstreet, I contributed to government-adjacent projects, including MSME Gov Automation, which gave me early exposure to how data systems interact with public institutions.\n\nOne experience that especially shaped my interests was a media coverage analysis project I conducted for CAIR through Boston University\u2019s Spark program. Using NLP and text analysis, I examined how local Massachusetts news outlets covered religious communities over time and translated those findings into actionable insights for civil rights stakeholders. That experience showed me how data can help make complex social patterns more visible and usable for organizations working toward public accountability.\n\nI also co-founded Working Voice, a nonprofit initiative connecting NGOs with student volunteers, which deepened my interest in community-centered problem-solving and institutional access.",
+   Q10:"I\u2019m especially interested in AI in government decision-making, specifically the gap between what an AI system outputs and what communities can actually understand, question, or contest.\n\nIn my current research on predicting drug-associated acute kidney injury in ICU patients, I used SHAP interpretability not only to improve model performance, but also to better understand why the model behaved the way it did. That experience made me think more deeply about transparency and accountability in high-impact systems.\n\nI\u2019m interested in how similar questions apply to public infrastructure and civic technology. When AI systems influence decisions around road repairs, public resource allocation, inspections, or benefits, the people affected deserve systems that are understandable and accountable not just technically accurate.\n\nWhat excites me most about this program is the opportunity to explore how cities and public institutions can adopt AI tools in ways that are transparent, and genuinely useful to the communities they serve.",
+   Q11:"individual",Q12:""},
+
+  {id:7,
+   Q1:"Individual",
+   Q2:"Daria Zaporozhets",
+   Q3:"dashoksi.top@gmail.com",
+   Q4:"University of Sussex",
+   Q5:"BA International Development and Finance, graduate in 2027",
+   Q6:"www.linkedin.com/in/daria-zaporozhets-708110333",
+   Q7:"United Kingdom, Brighton",
+   Q8:"Yes",Q8_2:"",
+   Q9:"Yes. I worked as a volunteer data analyst for UNDP, where I analysed datasets and supported data-driven decision making. I also completed a Policy Evaluation module during my exchange at the University of Hong Kong, where I used R to analyse policy-related datasets.\nAlongside this, I have civic and community experience through volunteering in a UK primary school supporting children with disabilities and with a local NGO in Ghana, where I helped implement an after-school programme for children.",
+   Q10:"I already had some exposure to decision-making processes through my experience working with data in an NGO environment, which made me very interested in how evidence and analysis shape policy outcomes. This summer, I would especially like to explore the role of AI in government decision-making and public policy. I find it really interesting how AI and data tools can improve efficiency, identify patterns more quickly, and support more informed decisions within the public sector.",
+   Q11:"-",Q12:""},
+
+  {id:8,
+   Q1:"Individual",
+   Q2:"Crystal Ngo",
+   Q3:"thecrystalngo1516@gmail.com",
+   Q4:"Boston University",
+   Q5:"BS Data Science, Rising Sophomore & Minor in Public Policy Analysis",
+   Q6:"https://www.linkedin.com/in/crystal-ngo-1a9835271/",
+   Q7:"United States",
+   Q8:"Yes",Q8_2:"",
+   Q9:"In my Freshman year, I've taken classes such as Intro To Data Science, Intro to Python (familiarizing myself with basics of Pandas, Numpy, Statistical Modeling, Visualization) and Intro to Public Policy. I've done two class projects regarding cleaning NBA Datasets as well as Sleep Datasets using the concepts that I've learned. Although I don't have as much experience, I'm really excited to have the opportunity to be able to participate and develop skills in Public Policy and Data Science for social good. ",
+   Q10:" I would love to explore the disparity between 311 calls in different neighborhoods in Boston regarding trust, budget allocation and government decisions - specifically responsiveness. Through this challenge, my goal is to determine if service complaints correlate to budget allocation, citizen trust, and government. I'm excited to uncover the hidden systemic inequities especially in Boston - a city that I've grown to love and would like to know more about. ",
+   Q11:"",Q12:""},
+
+  {id:9,
+   Q1:"Individual",
+   Q2:"Keerthi Kulkarni",
+   Q3:"keerthi.kulkarni@utsouthwestern.edu",
+   Q4:"UT Southwestern- School of Public Health",
+   Q5:"MPH- 2nd year",
+   Q6:"www.linkedin.com/in/keerthi-kulkarni",
+   Q7:"United States",
+   Q8:"Yes",Q8_2:"",
+   Q9:"Yes. I have experience working with research data and data management, including organizing and analyzing datasets using R programming. My background also includes conducting literature reviews, synthesizing scientific evidence, and contributing to manuscript writing for public health research projects. Through these experiences, I have developed skills in data analysis, evidence-based decision-making, and communicating research findings effectively.\n",
+   Q10:"AI in government decision-making- I am most interested in exploring AI in government decision-making, particularly how data-driven tools can support evidence-based public health policies and improve the allocation of resources. This area especially interests me because I want to delve deeply into Texas dementia policies and the state\u2019s five-year strategic planning efforts to better understand how AI can inform policy development, identify gaps in care, forecast future needs, and support equitable decision-making. With my background in epidemiology, data analysis, and research, I am eager to explore how AI can help governments analyze population health trends, improve service delivery, and strengthen public health systems while maintaining transparency, accountability, and fairness.\n",
+   Q11:"",Q12:"I learned about this program through a LinkedIn post shared by a UTSW faculty member, which highlighted the opportunity to engage with policy, data, and technology to address public sector challenges.\n"},
+
+  {id:10,
+   Q1:"Individual",
+   Q2:"Mark Martirosian",
+   Q3:"mmarti40@tufts.edu",
+   Q4:"Tufts ",
+   Q5:"Recent Grad, BS Computer Science 2026",
+   Q6:"https://www.linkedin.com/in/mark-martirosian-4b32b5241/",
+   Q7:"US, Massachusetts",
+   Q8:"Yes",Q8_2:"",
+   Q9:"Yes, my background is primarily in machine learning research and AI systems. Over the past year, I have become increasingly involved in AI safety and mechanistic interpretability, conducting research on the internal representations of large language models and how they influence model behavior, and I am interested in how these techniques can be applied to public-sector and civic challenges.",
+   Q10:"This summer, I would like to explore how geographic and socioeconomic information is represented inside large language models, with the end goal of understanding and potentially mitigating geographic and socioeconomic biases in LLMs. ",
+   Q11:"",Q12:"LinkedIn"},
+
+  {id:11,
+   Q1:"Individual",
+   Q2:"Peter Waggonner",
+   Q3:"peter.waggonner@yale.edu",
+   Q4:"Yale School of Management",
+   Q5:"Recent grad, MBA, 2026",
+   Q6:"https://www.linkedin.com/in/peterwaggonner",
+   Q7:"United States",
+   Q8:"Yes",Q8_2:"",
+   Q9:"Yes!  From 2015-2018, I worked for the New Orleans City Council, where I had user access to many municipal software systems (Granicus, Municode, LAMA, KANA, SalesForce, ArcGIS).  I then clerked at the nation's largest metropolitan planning organization, the Southern California Association of Governments, where I continued.  Prior to business school, I was Public Policy Director for Greater New Orleans, Inc. (GNO, Inc.), working at local, state, and federal levels on insurance, infrastructure, and environmental policy.  This included helping the City of New Orleans prepare for Super Bowl LIX and engagement in infrastructure coordination meetings, with respective agencies' databases.",
+   Q10:"I want to understand how to assess the location and condition of physical infrastructure via LiDAR, geospatial, and AI technologies, thereby automating a list of priority repairs.  I would love for my project to be pertinent to the ten parish region of Greater New Orleans, where I work and have connections to local governments.",
+   Q11:"",Q12:"Through Cyvl's LinkedIn"},
+
+  {id:12,
+   Q1:"Individual",
+   Q2:"Eric Truong",
+   Q3:"etroic@gmail.com",
+   Q4:"Babson College",
+   Q5:"B.Sc Business Administration, 2024",
+   Q6:"https://www.linkedin.com/in/etruong1/",
+   Q7:"United States",
+   Q8:"Yes",Q8_2:"",
+   Q9:"I've worked in civic operations for the past year as a Grants and Budget Manager at the City of Boston's Office of Youth Employment & Opportunity, managing systems behind $30M in funding and 200+ partner organizations. Before that, I interned at the U.S. Department of State, Arup, and Boston's Transportation Department. Recently I've been pushing into the technical side rather than the Data and Finance side, advocating and building automated workflows that cut our audit cycles by 40%, and won both of my first two hackathons (Greentown Labs x TEDxHarvard Square, CYVL x Autodesk x Nvidia).",
+   Q10:"I want to keep building onthe tool I started at the Greentown Labs Hackathon, using public climate, housing, and insurance data to surface real affordability indicators for homeowners. However, more broadly I'm interested in how AI can make government decision-making faster and more transparent. At OYEO I've seen firsthand how much time gets lost to manual processes that could be automated, and how much public data sits unused because no one's built the layer that makes it actionable. Whether that's climate risk, budget allocation, or service delivery, the underlying challenge is the same: public institutions have the data but not the tools to use it well.",
+   Q11:"I am not applying as a team",Q12:"Cyvl"},
+
+  {id:13,
+   Q1:"Individual",
+   Q2:"Adin Pepper Fox",
+   Q3:"adinpepperfox@gmail.com",
+   Q4:"Brown University",
+   Q5:"Recent grad B.Sc Mathematics-Computer Science, 2026",
+   Q6:"https://www.linkedin.com/in/adin-pepper-fox-4332b4247/",
+   Q7:"NY, United States",
+   Q8:"Yes",Q8_2:"",
+   Q9:"My experience lies in data/technology: I worked at the Carney Institute for Brain Science building deep learning models for biomedical image segmentation; I worked with large histopathology datasets and built segmentation and classification models for researchers. I was a research assistant in a neuroscience lab building data pipelines for experimental electrode signal data. I was super hot in NYC a few weeks ago, so I did a personal deep dive into land surface temperature (LST) data to study the urban heat island effect in the NYC metro area, comparing how heat patterns differ across seasons and times of day in the city versus surrounding suburban and rural areas. ",
+   Q10:"I'm most drawn to the infrastructure equity angle: figuring out who actually benefits when a city decides what to fix first, and what gets systematically deprioritized when budgets are tight. I'm interested in using Cyvl's infrastructure data to ask the kind of comparative question: not just \"what's broken,\" but \"is what's broken correlated with who lives there and how its built,\" and how a prioritization model could be built to make sure resource allocation doesn't just default to whichever neighborhoods are loudest or wealthiest.",
+   Q11:"",Q12:""},
+
+  {id:14,
+   Q1:"Individual",
+   Q2:"Shravani Maskar",
+   Q3:"maskarshravani@gmail.com",
+   Q4:"Boston University ",
+   Q5:"M.S. Data Science, Expected December 2026",
+   Q6:"https://www.linkedin.com/in/shravani-maskar/",
+   Q7:"United States, Massachusetts",
+   Q8:"Yes",Q8_2:"",
+   Q9:"Yes. At BU Spark!'s Data for the Greater Good program, I built a Metadata Health Dashboard for the Cambridge Open Data Portal and presented findings to stakeholders at MassMutual HQ. I also led geospatial analysis for the CHAPA Affordable Housing project (selected for BU Spark! Demo Day), which examined ~3,000 properties across Massachusetts. Most recently, I participated in a civic infrastructure hackathon in Somerville where my team built \"Street Surgeon\"  an infrastructure simulation sandbox using Cyvl point cloud data and Autodesk APS. My MS in Data Science at Boston University has focused on building pipelines and systems that connect data to real decisions.",
+   Q10:"\n\nI want to work on 311 and road data fusion  and the reason is pretty simple: I think cities are making maintenance decisions with half the picture. They have sensor data that shows what's physically broken, and they have 311 calls that show what residents are frustrated enough to report but nobody's really asking what happens in the space between those two. That gap is where I want to dig. Some neighborhoods file 311 requests constantly. Others go quiet, not because their streets are fine, but because people have learned that reporting doesn't lead to anything. When you overlay that silence with Cyvl's infrastructure data, you start to see something more uncomfortable than potholes  you see a pattern of where cities are paying attention and where they've quietly stopped. I want to build something that actually surfaces that. Not just a dashboard that optimizes repair schedules, but a tool that makes the inequity visible and harder to ignore.",
+   Q11:"",Q12:"Linkedin"},
+
+  {id:15,
+   Q1:"Individual",
+   Q2:"Shahd Elgouhary",
+   Q3:"shahd.elgouhary2@gmail.com",
+   Q4:"University of Sadat City ",
+   Q5:"B. Sc Computer Science ",
+   Q6:"https://www.linkedin.com/in/shahdelgouhary",
+   Q7:"Egypt, Cairo",
+   Q8:"Yes",Q8_2:"",
+   Q9:"Yes. I have experience across data, technology, and community-focused initiatives.\nOn the technical side, I have worked on several projects, including a Music Recommendation System using Spotify API and Streamlit, a Hotel Database Management System using C#, SQL, and MySQL, and an NLP project called MindWave. I have also completed internships and training programs in AI, machine learning, data engineering, and quantum computing through organizations such as Samsung Innovation Campus, MCIT, CodeAlpha, and QWorld.\nIn addition, I have participated in youth development and volunteer initiatives that focused on learning, collaboration, and supporting students in technology-related activities. These experiences helped me develop not only technical skills but also teamwork, communication, and problem-solving abilities in real-world environments.",
+   Q10:"This summer, I\u2019d most want to dig into challenges at the intersection of AI and public decision-making, especially where data can directly improve how systems serve people.\n\nI\u2019m particularly interested in how AI and data-driven models can support fair and transparent public resource allocation\u2014for example, optimizing how budgets, services, or infrastructure investments are distributed across different communities. I find it fascinating (and important) to explore how data can reveal inefficiencies or inequalities that are not immediately visible, and how it can help decision-makers prioritize impact in a more evidence-based way.\n\nAt the same time, I\u2019m also curious about the limits of these systems: how to ensure fairness, avoid bias in data, and make models interpretable enough for real policy environments. I see this as a space where technical skills like machine learning and NLP meet real societal impact, which is exactly what motivates me to keep learning and building in this direction.",
+   Q11:"Individual ",Q12:"LinkedIn "},
+
+  {id:16,
+   Q1:"Individual",
+   Q2:"Samuel Hogan",
+   Q3:"samuelhogan86@gmail.com",
+   Q4:"SUNY Brockport",
+   Q5:"B.S. Computer Science",
+   Q6:"https://www.linkedin.com/in/samuelhogan-/",
+   Q7:"United States",
+   Q8:"Yes",Q8_2:"",
+   Q9:"Yes, I have experience with both data and technology through my studies, side projects, and work experience. I've previously taken on a project manager role within a web app development group where we created a MERN-stack healthcare patient portal. I also host 10+ hrs/wk of tutoring as a Computer Science Tutor at SUNY Brockport as well, which has sharpened my ability to break down complex topics to non-technical audiences. Outside of academics, I've worked on a handful of personal projects, including self-hosting a website (MERN-stack again, with TypeScript this time) on a Raspberry Pi.",
+   Q10:"I want to understand whether the infrastructure maintenance decisions made by cities are actually equitable. Using Cyvl's infrastructure data alongside public demographic and economic info, I can investigate whether the condition of a neighborhood's roads, sidewalks, and other infrastructure is the primary driver of maintenance and investment decisions, or whether factors like wealth and demographics have a greater influence than data would suggest.\n\nThis challenge stood out the most because there are real and identifiable disparities that may exist within a city or town. Most cities claim their maintenance decisions follow need, but we rarely have the data to verify such claims. Cyvl's LiDAR data provides a new lens here, since we can now quantify the actual condition of a neighborhood's infrastructure, and compare it against maintenance spending + demographics. Having identified disparities documented makes the problem substantially harder to kick down the road, and would lead to faster and more equitable maintenance decisions.",
+   Q11:"",Q12:"Cyvl employee referral"},
+
+  {id:17,
+   Q1:"Individual",
+   Q2:"Vaibhav Yadav",
+   Q3:"yadav.vaib@northeastern.edu",
+   Q4:"Northeastern University",
+   Q5:"MPS Applied Machine Intelligence",
+   Q6:"linkedin.com/in/vaibhav-yadav-kivi",
+   Q7:"United State, Washington",
+   Q8:"Yes",Q8_2:"",
+   Q9:"Yes, across two distinct chapters. Early in my career, I worked as a consulting data analyst with the Uttar Pradesh Panchayati Raj Department in India, where I built ML pipelines across 300+ villages to predict malaria outbreak risk (85% accuracy) and developed Power BI dashboards that tracked government infrastructure funding in real time. That work was squarely at the intersection of data and public impact, the kind where a wrong prediction or a missed signal has consequences for real people. More recently, I've been building on that foundation through my graduate work in Applied Machine Intelligence at Northeastern, including a co-op at Morgan Stanley, where I worked on AWS-based data pipelines and AI-augmented workflows. I've also independently built RoadGuard, a real-time road-hazard intelligence platform using Kafka, Spark Streaming, and PostGIS, which started as a technical project but has grown into something I see as civic infrastructure. Cities are drowning in signals they can't act on. That's the exact problem I want to help solve.",
+   Q10:"The question I keep returning to is this: cities are full of infrastructure signals they cannot act on. Not because the data doesn't exist, it does, but because there's no intelligence layer connecting what the data shows to what actually gets prioritized and funded.\nMy background is in civil engineering, and I spent two years inside UP's Panchayati Raj system watching \u20b92 billion in rural infrastructure funding move across 300+ villages. I built the monitoring dashboards. I ran the review meetings. I watched a well-designed report sit in front of a director and still not shift resources where they were needed most. The gap wasn't information; it was decision architecture.\nSince then, I've been thinking hard about what that intelligence layer actually looks like, specifically around road corridor systems where a single sensor network passively generates continuous data on pavement condition, dust pollution sources, roadside vegetation gaps, and illegal dumping. The same infrastructure that tells you which road to fix first also tells you where urban heat is intensifying, where carbon sequestration potential exists along road plantations, and where environmental compliance is quietly failing. Infrastructure maintenance and climate resilience aren't separate problems. They share the same physical surface.\nWhat excites me about this program is working with Cyvl's real datasets to stress-test that thinking, understanding how AI-assisted prioritization tools can simultaneously surface infrastructure deterioration, equity gaps in service delivery, and climate-relevant signals in a way that makes the right decision hard for city planners to ignore. That convergence of infrastructure, equity, and climate within a single decision layer is the challenge I most want to dig into this summer.\n\n",
+   Q11:"solo application. However, the skills and background I bring span what would typically require a team: civil engineering and infrastructure domain knowledge, production data engineering (AWS, Snowflake, DBT), applied ML and AI systems, and firsthand experience inside government decision-making at scale. The project I hope to build this summer sits at the intersection of all of these, an AI-assisted infrastructure prioritization framework that connects physical condition data to equity and climate outcomes in a form that city planners can actually act on.",
+   Q12:"Through Cyvl.ai \u2014 I've been following the company's work at the intersection of AI and civic infrastructure, and this opportunity came up through that connection."},
+
+  {id:18,
+   Q1:"Team (Please list all team members and their email in question 11). Only one person should serve as the primary point of contact.",
+   Q2:"Pranay Katyal",
+   Q3:"pranaykatyal2@gmail.com",
+   Q4:"Worcester Polytechnic Institute ",
+   Q5:"Recent grad, M S Robotics, WPI '26",
+   Q6:"https://www.linkedin.com/in/pranay-katyal/",
+   Q7:"United States",
+   Q8:"Yes",Q8_2:"",
+   Q9:"Worked with real sensor data and utilize algorithms to gain intelligence out of the said data. ",
+   Q10:"AI intelligence on Road safety guarantees. ",
+   Q11:"We work in the same lab,  have won a  Cyvl Hackathon together,  and it is easier for us to coordinate with each other. We all have a robotics background.",
+   Q12:"Through Cyvl"}
+];
+
+// ── STATE ─────────────────────────────────────────────────────────────────
+const STORAGE_KEY='pii_adcom_v2';
+let currentUser=null;
+function loadState(){try{return JSON.parse(localStorage.getItem(STORAGE_KEY))||{decisions:{},reviewers:[]};}catch(e){return{decisions:{},reviewers:[]};}}
+function saveState(s){localStorage.setItem(STORAGE_KEY,JSON.stringify(s));}
+function setState(fn){const s=loadState();fn(s);saveState(s);}
+
+// ── AUTH ──────────────────────────────────────────────────────────────────
+function doLogin(){
+  const email=document.getElementById('loginEmail').value.trim();
+  const pass=document.getElementById('loginPass').value;
+  document.getElementById('loginErr').textContent='';
+  if(email===ADMIN.email&&pass===ADMIN.password){
+    currentUser={email,name:ADMIN.name,role:'admin'};
+    showView('adminView');renderAdminDashboard();renderCMS();return;
+  }
+  const s=loadState();
+  const rev=(s.reviewers||[]).find(r=>r.email===email&&r.password===pass);
+  if(rev){
+    currentUser={email,name:rev.name,role:'reviewer'};
+    document.getElementById('reviewerLabel').textContent=rev.name;
+    showView('reviewerView');renderApplicantTable();return;
+  }
+  document.getElementById('loginErr').textContent='Invalid email or password.';
+}
+function doLogout(){
+  currentUser=null;
+  document.getElementById('loginEmail').value='';
+  document.getElementById('loginPass').value='';
+  document.getElementById('loginErr').textContent='';
+  showView('loginView');
+}
+document.getElementById('loginPass').addEventListener('keydown',e=>{if(e.key==='Enter')doLogin();});
+document.getElementById('loginEmail').addEventListener('keydown',e=>{if(e.key==='Enter')doLogin();});
+
+// ── VIEWS ─────────────────────────────────────────────────────────────────
+function showView(id){document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));document.getElementById(id).classList.add('active');}
+function showAdminTab(tab,btn){
+  document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));btn.classList.add('active');
+  document.getElementById('dashboardTab').style.display=tab==='dashboard'?'block':'none';
+  document.getElementById('cmsTab').style.display=tab==='cms'?'block':'none';
+  if(tab==='dashboard')renderAdminDashboard();if(tab==='cms')renderCMS();
+}
+
+// ── HELPERS ───────────────────────────────────────────────────────────────
+function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+function escPre(s){return esc(s);}
+function lnk(url){if(!url)return '';const u=url.startsWith('http')?url:'https://'+url;return `<a class="app-link" href="${esc(u)}" target="_blank" rel="noopener">${esc(url)} ↗</a>`;}
+function decisionStatus(dec){if(dec.admit)return'admit';if(dec.reject)return'reject';if(dec.waitlist)return'waitlist';return'pending';}
+function dsBadgeHtml(ds){
+  return ds==='admit'?`<span class="decision-status ds-admit">Admit</span>`
+        :ds==='reject'?`<span class="decision-status ds-reject">Reject</span>`
+        :ds==='waitlist'?`<span class="decision-status ds-waitlist">Waitlist</span>`
+        :`<span class="decision-status ds-pending">Pending</span>`;
+}
+function qBlock(label,answer,full){
+  const cls=full?'app-q full-width':'app-q';
+  const content=answer&&answer.trim()?`<div class="app-q-answer">${escPre(answer.trim())}</div>`:`<div class="app-q-answer app-q-empty">Not provided</div>`;
+  return `<div class="${cls}"><div class="app-q-label">${label}</div>${content}</div>`;
+}
+
+// ── REVIEWER TABLE ────────────────────────────────────────────────────────
+function renderApplicantTable(filter='',statusF=''){
+  const tbody=document.getElementById('appTbody');
+  const s=loadState();
+  let html='',shown=0;
+  APPLICANTS.forEach(a=>{
+    const q=filter.toLowerCase();
+    if(q&&!a.Q2.toLowerCase().includes(q)&&!a.Q4.toLowerCase().includes(q)&&!a.Q7.toLowerCase().includes(q))return;
+    const k=`${currentUser.email}::${a.id}`;
+    const dec=(s.decisions||{})[k]||{admit:false,reject:false,waitlist:false,notes:''};
+    const ds=decisionStatus(dec);
+    if(statusF&&statusF!==ds)return;
+    shown++;
+    const isTeam=a.Q1&&a.Q1.toLowerCase().startsWith('team');
+
+    const fullApp = buildFullApp(a);
+
+    html+=`
+    <tr class="data-row" id="row-${a.id}">
+      <td style="color:rgba(14,14,12,.35);font-size:12px;font-family:var(--mono)">${String(a.id).padStart(2,'0')}</td>
+      <td>
+        <div class="app-name">${esc(a.Q2)}</div>
+        <div class="app-meta">${esc(a.Q3)}</div>
+        ${dsBadgeHtml(ds)}
+      </td>
+      <td><div style="font-size:13px">${esc(a.Q4.trim())}</div></td>
+      <td><div class="app-meta" style="font-size:12px;max-width:220px">${esc(a.Q5)}</div></td>
+      <td><div class="app-meta" style="font-size:12px">${esc(a.Q7)}</div></td>
+      <td><span style="font-size:11px;color:${isTeam?'var(--waitlist)':'rgba(14,14,12,.45)'};font-weight:600">${isTeam?'Team':'Individual'}</span></td>
+      <td>${lnk(a.Q6)}</td>
+      <td><button class="expand-btn" id="expbtn-${a.id}" onclick="toggleExpand(${a.id})">▸ Full Application</button></td>
+      <td class="decision-cell">
+        <div class="decision-group">
+          <div class="dec-row"><input type="checkbox" class="cb-admit" id="admit-${a.id}" ${dec.admit?'checked':''} onchange="onCBChange(${a.id},'admit',this)"><label for="admit-${a.id}">Admit</label></div>
+          <div class="dec-row"><input type="checkbox" class="cb-reject" id="reject-${a.id}" ${dec.reject?'checked':''} onchange="onCBChange(${a.id},'reject',this)"><label for="reject-${a.id}">Reject</label></div>
+          <div class="dec-row"><input type="checkbox" class="cb-waitlist" id="waitlist-${a.id}" ${dec.waitlist?'checked':''} onchange="onCBChange(${a.id},'waitlist',this)"><label for="waitlist-${a.id}">Waitlist</label></div>
+        </div>
+      </td>
+      <td>
+        <textarea class="notes-field" id="notes-${a.id}" placeholder="Add notes…" onblur="saveNotes(${a.id})">${esc(dec.notes||'')}</textarea>
+        <button class="save-btn" onclick="saveNotes(${a.id})">Save</button>
+        <div class="saved-flash" id="flash-${a.id}">Saved ✓</div>
+      </td>
+    </tr>
+    <tr class="expand-row" id="exp-${a.id}">
+      <td class="expand-cell" colspan="10">${fullApp}</td>
+    </tr>`;
+  });
+
+  tbody.innerHTML=html||`<tr><td colspan="10" style="text-align:center;padding:40px;color:rgba(14,14,12,.4)">No applicants match your filter.</td></tr>`;
+  document.getElementById('appCountBadge').textContent=shown;
+}
+
+function onCBChange(appId,field,el){
+  if(el.checked){['admit','reject','waitlist'].forEach(f=>{if(f!==field){const cb=document.getElementById(`${f}-${appId}`);if(cb)cb.checked=false;}});}
+  autosave(appId);
+}
+function autosave(appId){
+  const admit=document.getElementById(`admit-${appId}`).checked;
+  const reject=document.getElementById(`reject-${appId}`).checked;
+  const waitlist=document.getElementById(`waitlist-${appId}`).checked;
+  const notes=document.getElementById(`notes-${appId}`).value;
+  const k=`${currentUser.email}::${appId}`;
+  setState(s=>{s.decisions=s.decisions||{};s.decisions[k]={admit,reject,waitlist,notes};});
+  const ds=decisionStatus({admit,reject,waitlist});
+  const badge=document.querySelector(`#row-${appId} .decision-status`);
+  if(badge){badge.className='decision-status ds-'+ds;badge.textContent=ds.charAt(0).toUpperCase()+ds.slice(1);}
+}
+function saveNotes(appId){
+  autosave(appId);
+  const f=document.getElementById(`flash-${appId}`);
+  f.style.display='block';setTimeout(()=>f.style.display='none',1500);
+}
+function toggleExpand(appId){
+  const row=document.getElementById(`exp-${appId}`);
+  const btn=document.getElementById(`expbtn-${appId}`);
+  const open=row.classList.toggle('open');
+  btn.textContent=open?'▾ Close Application':'▸ Full Application';
+}
+function filterApplicants(){
+  renderApplicantTable(document.getElementById('searchInput').value,document.getElementById('statusFilter').value);
+}
+
+// ── ADMIN SUB-TABS ────────────────────────────────────────────────────────
+function showAdminSubTab(tab, btn){
+  document.querySelectorAll('.ast-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  document.getElementById('adminSummaryPane').style.display = tab==='summary'?'block':'none';
+  document.getElementById('adminPacketsPane').style.display = tab==='packets'?'block':'none';
+  if(tab==='packets') renderAdminPackets();
+}
+
+// ── ADMIN APPLICANT PACKETS ───────────────────────────────────────────────
+function renderAdminPackets(filter=''){
+  const tbody = document.getElementById('adminAppTbody');
+  const s = loadState();
+  const q = filter.toLowerCase();
+  let html = '', shown = 0;
+
+  APPLICANTS.forEach(a => {
+    if(q && !a.Q2.toLowerCase().includes(q) && !a.Q4.toLowerCase().includes(q) && !a.Q7.toLowerCase().includes(q)) return;
+    const k = `${ADMIN.email}::${a.id}`;
+    const dec = (s.decisions||{})[k] || {admit:false, reject:false, waitlist:false, notes:''};
+    const ds = decisionStatus(dec);
+    const isTeam = a.Q1 && a.Q1.toLowerCase().startsWith('team');
+    shown++;
+
+    const fullApp = buildFullApp(a);
+
+    html += `
+    <tr class="data-row" id="adrow-${a.id}">
+      <td style="color:rgba(14,14,12,.35);font-size:12px;font-family:var(--mono)">${String(a.id).padStart(2,'0')}</td>
+      <td>
+        <div class="app-name">${esc(a.Q2)}</div>
+        <div class="app-meta">${esc(a.Q3)}</div>
+        ${dsBadgeHtml(ds)}
+      </td>
+      <td><div style="font-size:13px">${esc(a.Q4.trim())}</div></td>
+      <td><div class="app-meta" style="font-size:12px;max-width:220px">${esc(a.Q5)}</div></td>
+      <td><div class="app-meta" style="font-size:12px">${esc(a.Q7)}</div></td>
+      <td><span style="font-size:11px;color:${isTeam?'var(--waitlist)':'rgba(14,14,12,.45)'};font-weight:600">${isTeam?'Team':'Individual'}</span></td>
+      <td>${lnk(a.Q6)}</td>
+      <td><button class="expand-btn" id="adexpbtn-${a.id}" onclick="toggleAdminExpand(${a.id})">▸ Full Application</button></td>
+      <td class="decision-cell">
+        <div class="decision-group">
+          <div class="dec-row"><input type="checkbox" class="cb-admit" id="adadmit-${a.id}" ${dec.admit?'checked':''} onchange="onAdminCBChange(${a.id},'admit',this)"><label for="adadmit-${a.id}">Admit</label></div>
+          <div class="dec-row"><input type="checkbox" class="cb-reject" id="adreject-${a.id}" ${dec.reject?'checked':''} onchange="onAdminCBChange(${a.id},'reject',this)"><label for="adreject-${a.id}">Reject</label></div>
+          <div class="dec-row"><input type="checkbox" class="cb-waitlist" id="adwaitlist-${a.id}" ${dec.waitlist?'checked':''} onchange="onAdminCBChange(${a.id},'waitlist',this)"><label for="adwaitlist-${a.id}">Waitlist</label></div>
+        </div>
+      </td>
+      <td>
+        <textarea class="notes-field" id="adnotes-${a.id}" placeholder="Add notes…" onblur="saveAdminNotes(${a.id})">${esc(dec.notes||'')}</textarea>
+        <button class="save-btn" onclick="saveAdminNotes(${a.id})">Save</button>
+        <div class="saved-flash" id="adflash-${a.id}">Saved ✓</div>
+      </td>
+    </tr>
+    <tr class="expand-row" id="adexp-${a.id}">
+      <td class="expand-cell" colspan="10">${fullApp}</td>
+    </tr>`;
+  });
+
+  tbody.innerHTML = html || `<tr><td colspan="10" style="text-align:center;padding:40px;color:rgba(14,14,12,.4)">No applicants match.</td></tr>`;
+}
+
+function filterAdminPackets(){
+  renderAdminPackets(document.getElementById('adminSearchInput').value);
+}
+
+function toggleAdminExpand(appId){
+  const row = document.getElementById(`adexp-${appId}`);
+  const btn = document.getElementById(`adexpbtn-${appId}`);
+  const open = row.classList.toggle('open');
+  btn.textContent = open ? '▾ Close Application' : '▸ Full Application';
+}
+
+function onAdminCBChange(appId, field, el){
+  if(el.checked){
+    ['admit','reject','waitlist'].forEach(f=>{
+      if(f!==field){ const cb=document.getElementById(`ad${f}-${appId}`); if(cb) cb.checked=false; }
+    });
+  }
+  autosaveAdmin(appId);
+}
+
+function autosaveAdmin(appId){
+  const admit    = document.getElementById(`adadmit-${appId}`).checked;
+  const reject   = document.getElementById(`adreject-${appId}`).checked;
+  const waitlist = document.getElementById(`adwaitlist-${appId}`).checked;
+  const notes    = document.getElementById(`adnotes-${appId}`).value;
+  const k = `${ADMIN.email}::${appId}`;
+  setState(s=>{ s.decisions=s.decisions||{}; s.decisions[k]={admit,reject,waitlist,notes}; });
+  const ds = decisionStatus({admit,reject,waitlist});
+  const badge = document.querySelector(`#adrow-${appId} .decision-status`);
+  if(badge){ badge.className='decision-status ds-'+ds; badge.textContent=ds.charAt(0).toUpperCase()+ds.slice(1); }
+}
+
+function saveAdminNotes(appId){
+  autosaveAdmin(appId);
+  const f = document.getElementById(`adflash-${appId}`);
+  f.style.display='block'; setTimeout(()=>f.style.display='none',1500);
+}
+
+function buildFullApp(a){
+  return `<div class="app-full">
+    <div class="app-full-grid">
+      ${qBlock('Q1 — Application Type',a.Q1,false)}
+      ${qBlock('Q2 — Full Name',a.Q2,false)}
+      ${qBlock('Q3 — Email',a.Q3,false)}
+      ${qBlock('Q4 — Current School or Institution',a.Q4,false)}
+      ${qBlock('Q5 — Degree Program and Year',a.Q5,false)}
+      ${qBlock('Q6 — LinkedIn Profile',a.Q6,false)}
+      ${qBlock('Q7 — Country and State',a.Q7,false)}
+      ${qBlock('Q8 — Can you commit to the full program period? (July 13 – August 21)',a.Q8+(a.Q8_2?'\n\nNo — details: '+a.Q8_2:''),false)}
+      ${qBlock('Q9 — Experience with data, technology, policy, or civic work',a.Q9,true)}
+      ${qBlock('Q10 — Challenge you most want to dig into this summer',a.Q10,true)}
+      ${a.Q11?qBlock('Q11 — Team application details',a.Q11,true):''}
+      ${a.Q12?qBlock('Q12 — How did you hear about this program?',a.Q12,false):''}
+    </div>
+  </div>`;
+}
+
+// ── ADMIN DASHBOARD ───────────────────────────────────────────────────────
+function renderAdminDashboard(){
+  const s = loadState();
+  const all = s.decisions || {};
+  const overrides = s.overrides || {};
+  let admitCount=0, rejectCount=0, waitlistCount=0, pendingCount=0;
+
+  const rows = APPLICANTS.map(a => {
+    const revDecisions = Object.entries(all)
+      .filter(([k]) => k.endsWith(`::${a.id}`))
+      .map(([k,v]) => ({reviewer: k.split('::')[0], ...v}));
+
+    const counts = {admit:0, reject:0, waitlist:0};
+    revDecisions.forEach(rd => {
+      if(rd.admit) counts.admit++;
+      else if(rd.reject) counts.reject++;
+      else if(rd.waitlist) counts.waitlist++;
+    });
+
+    const total = counts.admit + counts.reject + counts.waitlist;
+    let consensus = 'pending';
+    let isTie = false;
+    if(total > 0){
+      const max = Math.max(counts.admit, counts.reject, counts.waitlist);
+      const leaders = ['admit','reject','waitlist'].filter(k => counts[k] === max);
+      if(leaders.length === 1) consensus = leaders[0];
+      else { isTie = true; consensus = 'tie'; }
+    }
+
+    const override = overrides[a.id] || null;
+    const allNotes = revDecisions.filter(rd=>rd.notes&&rd.notes.trim()).map(rd=>`<span style="font-size:10px;color:rgba(14,14,12,.45)">${esc(rd.reviewer)}:</span> ${esc(rd.notes.trim())}`).join('<br><br>');
+
+    return {a, revDecisions, counts, total, consensus, isTie, override, allNotes};
+  });
+
+  rows.forEach(r => {
+    const finalDec = r.override || r.consensus;
+    if(finalDec==='admit') admitCount++;
+    else if(finalDec==='reject') rejectCount++;
+    else if(finalDec==='waitlist') waitlistCount++;
+    else pendingCount++;
+  });
+
+  document.getElementById('ds-admit').textContent = admitCount;
+  document.getElementById('ds-reject').textContent = rejectCount;
+  document.getElementById('ds-waitlist').textContent = waitlistCount;
+  document.getElementById('ds-pending').textContent = pendingCount;
+
+  const tbody = document.getElementById('adminTbody');
+  let html = '';
+
+  rows.forEach(r => {
+    // Reviewer vote pills
+    const votesHtml = r.total === 0
+      ? `<span style="font-size:12px;color:rgba(14,14,12,.35)">No votes yet</span>`
+      : `<div class="vote-counts">
+          <div class="vote-row ${r.counts.admit===0?'vote-zero':''}">
+            <span class="vote-pill vp-admit">${r.counts.admit}</span>
+            <span class="vote-label">Admit</span>
+          </div>
+          <div class="vote-row ${r.counts.reject===0?'vote-zero':''}">
+            <span class="vote-pill vp-reject">${r.counts.reject}</span>
+            <span class="vote-label">Reject</span>
+          </div>
+          <div class="vote-row ${r.counts.waitlist===0?'vote-zero':''}">
+            <span class="vote-pill vp-waitlist">${r.counts.waitlist}</span>
+            <span class="vote-label">Waitlist</span>
+          </div>
+        </div>`;
+
+    // Final decision cell
+    let finalHtml = '';
+    if(r.override){
+      finalHtml = `
+        <div class="override-set" style="color:${r.override==='admit'?'var(--admit)':r.override==='reject'?'var(--reject)':'var(--waitlist)'}">
+          ★ ${r.override.charAt(0).toUpperCase()+r.override.slice(1)} <span style="font-size:9px;opacity:.6">(override)</span>
+        </div>
+        <div><button class="ov-btn ov-btn-clear" onclick="clearOverride(${r.a.id})">Clear override</button></div>`;
+    } else if(r.isTie){
+      finalHtml = `
+        <span class="tie-badge">Tie</span>
+        <div style="font-size:11px;color:rgba(14,14,12,.5);margin:6px 0 2px">Admin override required</div>
+        <select class="override-select" onchange="setOverride(${r.a.id},this.value)">
+          <option value="">Select decision…</option>
+          <option value="admit">Admit</option>
+          <option value="reject">Reject</option>
+          <option value="waitlist">Waitlist</option>
+        </select>`;
+    } else if(r.consensus === 'pending'){
+      finalHtml = dsBadgeHtml('pending');
+    } else {
+      finalHtml = `
+        ${dsBadgeHtml(r.consensus)}
+        <div style="margin-top:6px">
+          <select class="override-select" onchange="setOverride(${r.a.id},this.value)" style="font-size:11px;padding:4px 8px">
+            <option value="">Override…</option>
+            <option value="admit">Admit</option>
+            <option value="reject">Reject</option>
+            <option value="waitlist">Waitlist</option>
+          </select>
+        </div>`;
+    }
+
+    html += `<tr>
+      <td style="color:rgba(14,14,12,.35);font-size:12px;font-family:var(--mono)">${String(r.a.id).padStart(2,'0')}</td>
+      <td><strong>${esc(r.a.Q2)}</strong><br><span style="font-size:11px;color:rgba(14,14,12,.45)">${esc(r.a.Q3)}</span></td>
+      <td style="font-size:12px">${esc(r.a.Q4.trim())}</td>
+      <td>${votesHtml}</td>
+      <td class="final-dec-cell">${finalHtml}</td>
+      <td style="font-size:12px;color:rgba(14,14,12,.5);max-width:280px;line-height:1.6">${r.allNotes||'—'}</td>
+    </tr>`;
+  });
+
+  tbody.innerHTML = html;
+}
+
+function setOverride(appId, value){
+  if(!value) return;
+  setState(s=>{ s.overrides=s.overrides||{}; s.overrides[appId]=value; });
+  renderAdminDashboard();
+}
+
+function clearOverride(appId){
+  setState(s=>{ if(s.overrides) delete s.overrides[appId]; });
+  renderAdminDashboard();
+}
+
+function exportCSV(){
+  const s = loadState();
+  const all = s.decisions || {};
+  const overrides = s.overrides || {};
+  let csv = 'ID,Name,Email,Institution,Program,Location,Type,Admit Votes,Reject Votes,Waitlist Votes,Consensus,Override,Final Decision\n';
+  APPLICANTS.forEach(a => {
+    const revs = Object.entries(all).filter(([k])=>k.endsWith(`::${a.id}`)).map(([k,v])=>({reviewer:k.split('::')[0],...v}));
+    const isTeam = a.Q1.toLowerCase().startsWith('team') ? 'Team' : 'Individual';
+    const counts = {admit:0,reject:0,waitlist:0};
+    revs.forEach(rd=>{ if(rd.admit)counts.admit++; else if(rd.reject)counts.reject++; else if(rd.waitlist)counts.waitlist++; });
+    const total = counts.admit+counts.reject+counts.waitlist;
+    let consensus='Pending';
+    if(total>0){
+      const max=Math.max(counts.admit,counts.reject,counts.waitlist);
+      const leaders=['admit','reject','waitlist'].filter(k=>counts[k]===max);
+      consensus = leaders.length===1 ? leaders[0].charAt(0).toUpperCase()+leaders[0].slice(1) : 'Tie';
+    }
+    const ov = overrides[a.id] ? overrides[a.id].charAt(0).toUpperCase()+overrides[a.id].slice(1) : '';
+    const finalDec = ov || consensus;
+    csv += `${a.id},"${a.Q2}","${a.Q3}","${a.Q4.trim()}","${a.Q5}","${a.Q7}","${isTeam}",${counts.admit},${counts.reject},${counts.waitlist},"${consensus}","${ov}","${finalDec}"\n`;
+  });
+  const blob = new Blob([csv],{type:'text/csv'});
+  const url = URL.createObjectURL(blob);
+  const el = document.createElement('a'); el.href=url; el.download='PII_Cyvl_Admissions_Decisions.csv'; el.click();
+  URL.revokeObjectURL(url);
+}
+
+// ── CMS ───────────────────────────────────────────────────────────────────
+function renderCMS(){
+  const s=loadState();const reviewers=s.reviewers||[];
+  const grid=document.getElementById('reviewerGrid');
+  if(reviewers.length===0){grid.innerHTML=`<div style="grid-column:1/-1;color:rgba(14,14,12,.4);font-size:13px;padding:24px 0">No reviewers added yet.</div>`;return;}
+  grid.innerHTML=reviewers.map((r,i)=>`<div class="reviewer-card"><button class="del-btn" onclick="deleteReviewer(${i})" title="Remove">✕</button><h4>${esc(r.name)}</h4><p>${esc(r.email)}</p><span class="badge-role">Reviewer</span></div>`).join('');
+}
+function addReviewer(){
+  const name=document.getElementById('newName').value.trim();
+  const email=document.getElementById('newEmail').value.trim();
+  const pass=document.getElementById('newPass').value.trim();
+  const msg=document.getElementById('cmsMsg');const err=document.getElementById('cmsErr');
+  msg.textContent='';err.textContent='';
+  if(!name||!email||!pass){err.textContent='All fields are required.';return;}
+  if(email===ADMIN.email){err.textContent='Cannot add admin email as a reviewer.';return;}
+  const s=loadState();
+  if((s.reviewers||[]).some(r=>r.email===email)){err.textContent='A reviewer with this email already exists.';return;}
+  setState(st=>{st.reviewers=st.reviewers||[];st.reviewers.push({name,email,password:pass});});
+  document.getElementById('newName').value='';document.getElementById('newEmail').value='';document.getElementById('newPass').value='';
+  msg.textContent=`${name} added successfully.`;setTimeout(()=>msg.textContent='',3000);
+  renderCMS();
+}
+function deleteReviewer(idx){
+  if(!confirm('Remove this reviewer? Their saved decisions will remain in the system.'))return;
+  setState(s=>{s.reviewers.splice(idx,1);});renderCMS();
+}
+</script>
+</body>
+</html>
